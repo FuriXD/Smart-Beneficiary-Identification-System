@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Smart Beneficiary Identification System</title>
+  <meta name="description" content="Create your SBIS citizen account to apply for welfare benefits.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Govt. strip -->
+<div class="govt-strip">
+  भारत सरकार — Government of India
+  <span>|</span>
+  Ministry of Social Justice &amp; Empowerment
+  <span>|</span>
+  Smart Beneficiary Identification System
+</div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <div class="logo-icon">🏛️</div>
+      <div class="brand-text">
+        <span class="brand-app">SBIS</span>
+        <span class="brand-tagline">Smart Beneficiary Identification System</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/register" class="active">Register</a></li>
+      <li><a href="/analytics">Analytics</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container" style="max-width:540px">
+    <div style="text-align:center;margin-bottom:2rem">
+      <h1>Create Your <span style="color:var(--blue-700)">Account</span></h1>
+      <p>Register as a citizen to submit your beneficiary application</p>
+    </div>
+
+    <div class="card">
+      <div id="reg-alert"></div>
+
+      <form id="reg-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Full Name</label>
+          <input id="reg-name" type="text" class="form-input"
+                 placeholder="As per official documents" autocomplete="name">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="reg-phone">Phone Number</label>
+            <input id="reg-phone" type="tel" class="form-input"
+                   placeholder="10-digit number" maxlength="10" autocomplete="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-aadhaar">Aadhaar Number</label>
+            <input id="reg-aadhaar" type="text" class="form-input"
+                   placeholder="12-digit Aadhaar" maxlength="12">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email (Optional)</label>
+          <input id="reg-email" type="email" class="form-input"
+                 placeholder="your@email.com" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Password</label>
+          <input id="reg-password" type="password" class="form-input"
+                 placeholder="Minimum 6 characters" autocomplete="new-password">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-confirm">Confirm Password</label>
+          <input id="reg-confirm" type="password" class="form-input"
+                 placeholder="Re-enter password">
+        </div>
+
+        <div class="alert alert-info" style="font-size:0.82rem;padding:0.6rem 0.9rem">
+          🔒 Your Aadhaar is securely hashed and only used for duplicate detection.
+        </div>
+
+        <button id="reg-btn" type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1rem">
+          Create Account →
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:1rem;font-size:0.9rem">
+        Already registered? <a href="/">Sign in →</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  redirectIfLoggedIn();
+
+  document.getElementById("reg-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const alertEl  = document.getElementById("reg-alert");
+    const btn      = document.getElementById("reg-btn");
+
+    const name     = document.getElementById("reg-name").value.trim();
+    const phone    = document.getElementById("reg-phone").value.trim();
+    const aadhaar  = document.getElementById("reg-aadhaar").value.trim();
+    const email    = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    const confirm  = document.getElementById("reg-confirm").value;
+
+    alertEl.innerHTML = "";
+
+    // Client-side validation
+    if (!name || !phone || !aadhaar || !password) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Please fill in all required fields.</div>`;
+      return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Phone must be exactly 10 digits.</div>`;
+      return;
+    }
+    if (!/^\d{12}$/.test(aadhaar)) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Aadhaar must be exactly 12 digits.</div>`;
+      return;
+    }
+    if (password.length < 6) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Password must be at least 6 characters.</div>`;
+      return;
+    }
+    if (password !== confirm) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Passwords do not match.</div>`;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Creating account…";
+
+    const { ok, data } = await apiCall("POST", "/api/register", {
+      name, phone, aadhaar, email, password
+    });
+
+    if (ok) {
+      setAuth(data.token, data.user);
+      alertEl.innerHTML = `<div class="alert alert-success">✅ Account created! Redirecting…</div>`;
+      setTimeout(() => window.location.href = "/apply", 1200);
+    } else {
+      alertEl.innerHTML = `<div class="alert alert-error">❌ ${data.error || "Registration failed"}</div>`;
+      btn.disabled = false;
+      btn.textContent = "Create Account →";
+    }
+  });
+</script>
+</body>
+</html>

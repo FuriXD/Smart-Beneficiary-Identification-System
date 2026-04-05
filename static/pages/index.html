@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SBIS — Smart Beneficiary Identification System</title>
+  <meta name="description" content="Govt. welfare eligibility portal — AI-powered fraud detection and beneficiary verification.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    /* Landing-specific overrides */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 3rem;
+      align-items: center;
+    }
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .login-panel { order: -1; }
+    }
+
+    /* Login panel */
+    .login-panel {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+    .login-panel h2 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+
+    /* Demo creds */
+    .demo-creds {
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 0.9rem;
+      margin-bottom: 1.1rem;
+    }
+    .demo-creds-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--blue-700);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .demo-row {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0.4rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .demo-row:hover { background: var(--blue-100); }
+    .demo-role { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+    .demo-phone { font-family: monospace; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+    .demo-hint { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* Pipeline */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+    .pipe-step {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.8rem;
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--blue-800, #1E40AF);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pipe-arrow { color: var(--text-muted); margin: 0 0.2rem; font-size: 0.8rem; flex-shrink: 0; }
+
+    /* Stats strip */
+    .stats-strip {
+      background: var(--blue-900);
+      padding: 1.5rem 0;
+      margin: 3rem 0 0;
+    }
+    .stats-strip-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    .strip-stat { text-align: center; color: #FFFFFF; }
+    .strip-stat-num { font-size: 1.6rem; font-weight: 800; display: block; }
+    .strip-stat-lbl { font-size: 0.72rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    @media (max-width: 640px) {
+      .stats-strip-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Govt. strip -->
+<div class="govt-strip">
+  भारत सरकार — Government of India
+  <span>|</span>
+  Ministry of Social Justice &amp; Empowerment
+  <span>|</span>
+  Smart Beneficiary Identification System
+</div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <div class="logo-icon">🏛️</div>
+      <div class="brand-text">
+        <span class="brand-app">SBIS</span>
+        <span class="brand-tagline">Smart Beneficiary Identification System</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/" class="active">Home</a></li>
+      <li><a href="/register">Register</a></li>
+      <li><a href="/analytics">Analytics</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero" style="background:linear-gradient(180deg,var(--blue-50) 0%,#FFFFFF 100%)">
+  <div class="container">
+    <div class="hero-grid">
+
+      <!-- Left -->
+      <div>
+        <div class="hero-eyebrow">🏛️ Government of India — Digital Welfare Portal</div>
+        <h1 style="color:var(--blue-900);margin-bottom:0.85rem">Smart Beneficiary<br>Identification System</h1>
+        <p style="font-size:1rem;max-width:480px;margin-bottom:1.75rem;color:var(--text-2)">
+          AI-driven eligibility assessment with real-time fraud detection — ensuring welfare benefits
+          reach the citizens who truly need them.
+        </p>
+
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:2rem">
+          <a href="/register" class="btn btn-primary btn-lg">Apply for Benefits →</a>
+          <a href="/analytics" class="btn btn-outline btn-lg">View Analytics</a>
+        </div>
+
+        <!-- Process pipeline -->
+        <p style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.5rem">Application Process</p>
+        <div class="pipeline">
+          <div class="pipe-step">📝 Apply</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">🧮 Scoring</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">🔍 Fraud Check</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">⚖️ Decision</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">📊 Dashboard</div>
+        </div>
+      </div>
+
+      <!-- Right — Login card -->
+      <div class="login-panel">
+        <h2>Sign In to Portal</h2>
+        <p style="margin-bottom:1.1rem;font-size:0.875rem">Access your beneficiary application</p>
+
+        <!-- Demo credentials -->
+        <div class="demo-creds">
+          <div class="demo-creds-title">🔑 Demo Credentials — Click to Fill</div>
+          <div class="demo-row" id="fill-user" title="Click to fill user credentials">
+            <span class="demo-role">User</span>
+            <span class="demo-phone">9000000001</span>
+            <span class="demo-hint">test123</span>
+          </div>
+          <div class="demo-row" id="fill-admin" title="Click to fill admin credentials">
+            <span class="demo-role">Admin</span>
+            <span class="demo-phone">9999999999</span>
+            <span class="demo-hint">admin123</span>
+          </div>
+        </div>
+
+        <div id="login-alert"></div>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="login-phone">Mobile Number</label>
+            <input id="login-phone" type="tel" class="form-input"
+                   placeholder="10-digit mobile number" maxlength="10" autocomplete="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input id="login-password" type="password" class="form-input"
+                   placeholder="Enter your password" autocomplete="current-password">
+          </div>
+          <button id="login-btn" type="submit" class="btn btn-primary btn-block btn-lg"
+                  style="margin-top:0.5rem">
+            Sign In →
+          </button>
+        </form>
+        <p style="text-align:center;margin-top:1rem;font-size:0.85rem">
+          New user? <a href="/register">Create Account →</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="container">
+    <div class="stats-strip-grid">
+      <div class="strip-stat"><span class="strip-stat-num">₹2.4Cr</span><span class="strip-stat-lbl">Benefits Processed</span></div>
+      <div class="strip-stat"><span class="strip-stat-num">98.2%</span><span class="strip-stat-lbl">Detection Accuracy</span></div>
+      <div class="strip-stat"><span class="strip-stat-num">15,000+</span><span class="strip-stat-lbl">Applications Reviewed</span></div>
+      <div class="strip-stat"><span class="strip-stat-num">2-Min</span><span class="strip-stat-lbl">Avg. Processing Time</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="container" style="padding:3rem 1.5rem">
+  <div style="text-align:center;margin-bottom:2rem">
+    <h2>End-to-end <span style="color:var(--blue-700)">Welfare Management</span></h2>
+    <p style="max-width:520px;margin:0.5rem auto 0">Built with the reliability standards of a production government system.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧮</div>
+      <h3 style="margin-bottom:0.4rem">Eligibility Scoring</h3>
+      <p style="font-size:0.875rem">Rule-based 0–100 score computed from income, family size, location, and age. Fully configurable.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🕵️</div>
+      <h3 style="margin-bottom:0.4rem">Fraud Detection</h3>
+      <p style="font-size:0.875rem">Automatically flags duplicate Aadhaar, duplicate phone numbers, and suspicious income-location anomalies.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3 style="margin-bottom:0.4rem">ML Risk Scoring</h3>
+      <p style="font-size:0.875rem">Logistic regression model provides a second-opinion fraud probability alongside the rule engine.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3 style="margin-bottom:0.4rem">Admin Dashboard</h3>
+      <p style="font-size:0.875rem">Full audit trail, manual override, CSV export, real-time analytics, and per-application action history.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="background:var(--blue-900);color:rgba(255,255,255,0.5);text-align:center;padding:1.25rem;font-size:0.8rem">
+  © 2025 Smart Beneficiary Identification System — Government of India &nbsp;|&nbsp; For demonstration purposes only
+</div>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  // Reset button state in case browser restored it from bfcache
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("login-btn");
+    if (btn) { btn.disabled = false; btn.textContent = "Sign In →"; }
+  });
+
+  redirectIfLoggedIn();
+
+  // Auto-fill on demo row click
+  document.getElementById("fill-user").addEventListener("click", () => {
+    document.getElementById("login-phone").value = "9000000001";
+    document.getElementById("login-password").value = "test123";
+    showToast("User credentials filled. Click Sign In.", "info");
+  });
+  document.getElementById("fill-admin").addEventListener("click", () => {
+    document.getElementById("login-phone").value = "9999999999";
+    document.getElementById("login-password").value = "admin123";
+    showToast("Admin credentials filled. Click Sign In.", "info");
+  });
+
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn  = document.getElementById("login-btn");
+    const err  = document.getElementById("login-alert");
+    const ph   = document.getElementById("login-phone").value.trim();
+    const pass = document.getElementById("login-password").value;
+
+    err.innerHTML = "";
+    if (!ph || !pass) {
+      err.innerHTML = '<div class="alert alert-error">⚠️ Mobile number and password are required.</div>'; return;
+    }
+
+    btn.disabled = true; btn.textContent = "Signing in…";
+    const { ok, data } = await apiCall("POST", "/api/login", { phone: ph, password: pass });
+
+    if (ok) {
+      setAuth(data.token, data.user);
+      showToast(`Welcome, ${data.user.name}!`, "success", 2000);
+      setTimeout(() => {
+        window.location.href = data.user.role === "admin" ? "/admin" : "/status";
+      }, 400);
+    } else {
+      err.innerHTML = `<div class="alert alert-error">❌ ${data.error || "Invalid credentials"}</div>`;
+      btn.disabled = false; btn.textContent = "Sign In →";
+    }
+  });
+</script>
+</body>
+</html>

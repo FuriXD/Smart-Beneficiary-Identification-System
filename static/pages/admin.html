@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — SBIS</title>
+  <meta name="description" content="Admin portal for the Smart Beneficiary Identification System.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .main-content { padding: 1.75rem; }
+    .page-heading { margin-bottom: 1.5rem; }
+    .page-heading h1 { font-size: 1.4rem; }
+    table td, table th { font-size: 0.845rem; }
+    .search-wrap { flex: 1; max-width: 260px; }
+    .table-foot {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .audit-divider { font-size: 0.72rem; text-transform: uppercase;
+                     letter-spacing: 0.07em; color: var(--text-muted);
+                     margin: 1rem 0 0.5rem; }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <a href="/" class="sidebar-brand">
+      <div class="brand-logo">🏛️</div>
+      <div>
+        <span class="brand-name">SBIS</span>
+        <span class="brand-sub">Admin Portal</span>
+      </div>
+    </a>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li class="sidebar-section-label">Main</li>
+        <li>
+          <a href="/admin" class="active">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18"/>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="/analytics">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6m6 0V9a2 2 0 012-2h2a2 2 0 012 2v10m6 0V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v14M3 19h18"/>
+            </svg>
+            Analytics
+          </a>
+        </li>
+        <li class="sidebar-section-label" style="margin-top:0.5rem">Actions</li>
+        <li>
+          <a href="#" onclick="exportCSV();return false">
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            </svg>
+            Export CSV
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="logout()" title="Click to logout">
+        <div class="user-avatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="side-username">Admin</div>
+          <div class="user-role">System Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main area ───────────────────────────────────────────── -->
+  <div class="main-area">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <span class="topbar-title">Application Management</span>
+      <div class="topbar-actions">
+        <span class="topbar-badge">🔑 Admin Mode</span>
+        <button onclick="exportCSV()" class="btn btn-outline btn-sm">📥 Export CSV</button>
+        <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <!-- KPI grid -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-blue">📋</div>
+          <div class="kpi-body"><div class="kpi-number" id="st-total">–</div><div class="kpi-label">Total Applications</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-green">✅</div>
+          <div class="kpi-body"><div class="kpi-number" id="st-eligible" style="color:var(--success)">–</div><div class="kpi-label">Eligible</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-red">🚩</div>
+          <div class="kpi-body"><div class="kpi-number" id="st-fraud" style="color:var(--danger)">–</div><div class="kpi-label">Fraud Flagged</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-amber">🔍</div>
+          <div class="kpi-body"><div class="kpi-number" id="st-review" style="color:var(--warning)">–</div><div class="kpi-label">Under Review</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-green">🎉</div>
+          <div class="kpi-body"><div class="kpi-number" id="st-approved">–</div><div class="kpi-label">Approved</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon-red">🚫</div>
+          <div class="kpi-body"><div class="kpi-number" id="st-rejected">–</div><div class="kpi-label">Rejected</div></div>
+        </div>
+      </div>
+
+      <!-- Filters + Search -->
+      <div class="card" style="padding:1rem;margin-bottom:1rem">
+        <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:0.75rem">
+          <div class="filter-bar">
+            <button class="filter-btn active" onclick="setFilter(null)"           id="f-all">All</button>
+            <button class="filter-btn" onclick="setFilter('Eligible')"            id="f-Eligible">✅ Eligible</button>
+            <button class="filter-btn" onclick="setFilter('Not Eligible')"        id="f-Not Eligible">❌ Not Eligible</button>
+            <button class="filter-btn" onclick="setFilter('Under Review')"        id="f-Under Review">🔍 Under Review</button>
+            <button class="filter-btn" onclick="setFilter('Approved')"            id="f-Approved">🎉 Approved</button>
+            <button class="filter-btn" onclick="setFilter('Rejected')"            id="f-Rejected">🚫 Rejected</button>
+            <button class="filter-btn" onclick="setFraudFilter()"                 id="f-fraud">🚩 Fraud</button>
+          </div>
+          <input id="search-input" type="text" class="form-input search-wrap"
+                 placeholder="Search by name…" oninput="debounceSearch()">
+        </div>
+      </div>
+
+      <!-- Table card -->
+      <div class="card" style="padding:0">
+        <!-- Skeleton -->
+        <div id="table-loading" style="padding:1.5rem">
+          <div class="skeleton" style="height:38px;margin-bottom:0.6rem"></div>
+          <div class="skeleton" style="height:46px;margin-bottom:0.4rem;opacity:0.7"></div>
+          <div class="skeleton" style="height:46px;margin-bottom:0.4rem;opacity:0.5"></div>
+          <div class="skeleton" style="height:46px;opacity:0.3"></div>
+        </div>
+
+        <div id="table-container" class="hidden">
+          <div class="table-wrap" style="border:none;border-radius:0">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Applicant</th>
+                  <th>Age</th>
+                  <th>Annual Income</th>
+                  <th>Location</th>
+                  <th>Score</th>
+                  <th>ML Risk</th>
+                  <th>Fraud</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="app-tbody"></tbody>
+            </table>
+          </div>
+          <div class="table-foot">
+            <span id="table-meta"></span>
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+
+        <div id="no-results" class="hidden text-center" style="padding:3rem">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem">🔎</div>
+          <p>No applications match your current filters.</p>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<!-- ── Override Modal ────────────────────────────────────────── -->
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Override Decision</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <p style="font-size:0.875rem;margin-bottom:1rem;color:var(--text-2)">
+      Application <strong id="modal-app-id"></strong> — <strong id="modal-app-name"></strong>
+    </p>
+    <div class="form-group">
+      <label class="form-label">New Status</label>
+      <select id="modal-action" class="form-select">
+        <option value="Approved">✅ Approved</option>
+        <option value="Rejected">❌ Rejected</option>
+        <option value="Eligible">Eligible</option>
+        <option value="Not Eligible">Not Eligible</option>
+        <option value="Under Review">🔍 Under Review</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Admin Note <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+      <input id="modal-note" type="text" class="form-input" placeholder="e.g. Verified via field visit">
+    </div>
+    <div id="modal-alert"></div>
+    <div style="display:flex;gap:0.75rem;margin-top:1rem">
+      <button onclick="submitOverride()" class="btn btn-primary" style="flex:1" id="modal-btn">Confirm Override</button>
+      <button onclick="closeModal()" class="btn btn-ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Audit Log Modal ──────────────────────────────────────── -->
+<div id="audit-overlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <h3>Audit Log — <span id="audit-app-name"></span></h3>
+      <button class="modal-close" onclick="closeAudit()">✕</button>
+    </div>
+    <div id="audit-loading" class="text-center" style="padding:1.5rem"><div class="spinner"></div></div>
+    <ul class="audit-list hidden" id="audit-list"></ul>
+    <p class="hidden" id="audit-empty" style="padding:1.5rem;text-align:center;color:var(--text-muted)">
+      No admin actions recorded for this application.
+    </p>
+    <div style="margin-top:1.25rem">
+      <button onclick="closeAudit()" class="btn btn-secondary btn-block">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  const admin = requireLogin("admin");
+  if (admin) document.getElementById("side-username").textContent = admin.name;
+
+  let currentFilter = null, fraudOnly = false, currentPage = 1;
+  let searchTimeout = null, selectedApp = null;
+
+  // ── Badge helpers ────────────────────────────────────────────
+  const BADGE_CLASS = {
+    "Eligible":     "badge-eligible",
+    "Not Eligible": "badge-not",
+    "Under Review": "badge-review",
+    "Approved":     "badge-approved",
+    "Rejected":     "badge-rejected",
+    "Pending":      "badge-pending"
+  };
+  function badge(status) {
+    return `<span class="badge ${BADGE_CLASS[status]||'badge-pending'}">${status}</span>`;
+  }
+  function inr(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
+
+  function scoreBarClass(score) {
+    if (score >= 60) return "high";
+    if (score >= 40) return "mid";
+    return "low";
+  }
+
+  function riskBadge(prob) {
+    if (prob === null || prob === undefined) return '<span style="color:var(--text-muted);font-size:0.75rem">—</span>';
+    const pct = Math.round(prob * 100);
+    const cls = pct < 30 ? "risk-low" : pct < 60 ? "risk-medium" : "risk-high";
+    const lbl = pct < 30 ? "Low" : pct < 60 ? "Med" : "High";
+    return `<span class="risk-badge ${cls}">${lbl} ${pct}%</span>`;
+  }
+
+  // ── Filters ──────────────────────────────────────────────────
+  function setFilter(status) {
+    currentFilter = status; fraudOnly = false; currentPage = 1;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    const btn = status ? document.getElementById(`f-${status}`) : document.getElementById("f-all");
+    if (btn) btn.classList.add("active");
+    loadApplications();
+  }
+  function setFraudFilter() {
+    fraudOnly = true; currentFilter = null; currentPage = 1;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("f-fraud").classList.add("active");
+    loadApplications();
+  }
+  function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => { currentPage = 1; loadApplications(); }, 350);
+  }
+
+  // ── Load data ────────────────────────────────────────────────
+  async function loadApplications() {
+    ["table-loading"].forEach(id => document.getElementById(id).classList.remove("hidden"));
+    ["table-container","no-results"].forEach(id => document.getElementById(id).classList.add("hidden"));
+
+    let url = `/api/admin/applications?page=${currentPage}&per_page=10`;
+    if (currentFilter) url += `&status=${encodeURIComponent(currentFilter)}`;
+    if (fraudOnly)      url += `&fraud=true`;
+    const q = document.getElementById("search-input").value.trim();
+    if (q) url += `&search=${encodeURIComponent(q)}`;
+
+    const { ok, data } = await apiCall("GET", url);
+    document.getElementById("table-loading").classList.add("hidden");
+    if (!ok) { showToast("Failed to load applications", "error"); return; }
+
+    loadStats();
+
+    if (!data.applications.length) {
+      document.getElementById("no-results").classList.remove("hidden"); return;
+    }
+    document.getElementById("table-container").classList.remove("hidden");
+    document.getElementById("table-meta").textContent =
+      `Showing ${data.applications.length} of ${data.total} applications`;
+
+    // Fetch ML scores in parallel
+    const mlScores = {};
+    await Promise.allSettled(data.applications.map(async a => {
+      const r = await apiCall("POST", "/api/ml-predict", {
+        income: a.income, family_size: a.family_size,
+        location: a.location, age: a.age, fraud_flag: a.fraud_flag
+      });
+      if (r.ok) mlScores[a.id] = r.data.fraud_probability;
+    }));
+
+    // Build rows
+    document.getElementById("app-tbody").innerHTML = data.applications.map(a => `
+      <tr class="${a.fraud_flag ? 'fraud-row' : ''}">
+        <td style="color:var(--text-muted);font-size:0.78rem">#${a.id}</td>
+        <td>
+          <div style="font-weight:600">${a.name}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">📱 ${a.phone}</div>
+        </td>
+        <td>${a.age}</td>
+        <td>${inr(a.income)}</td>
+        <td><span class="badge badge-${(a.location||'').toLowerCase()}">${(a.location||'').charAt(0).toUpperCase()+(a.location||'').slice(1).toLowerCase()}</span></td>
+        <td>
+          <div class="score-bar-wrap">
+            <div class="score-bar">
+              <div class="score-bar-fill ${scoreBarClass(a.score)}" style="width:${a.score}%"></div>
+            </div>
+            <span style="font-weight:700;font-size:0.875rem">${a.score}</span>
+          </div>
+        </td>
+        <td>${riskBadge(mlScores[a.id])}</td>
+        <td>${a.fraud_flag
+          ? '<span class="badge badge-fraud">🚩 Yes</span>'
+          : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td>${badge(a.status)}</td>
+        <td>
+          <div style="display:flex;gap:0.3rem">
+            <button class="btn btn-sm btn-outline"
+                    onclick="openModal(${a.id},'${a.name.replace(/'/g,"\\'")}','${a.status}')">
+              Override
+            </button>
+            <button class="btn btn-sm btn-ghost" title="Audit log"
+                    onclick="openAudit(${a.id},'${a.name.replace(/'/g,"\\'")}')">
+              📋
+            </button>
+          </div>
+        </td>
+      </tr>`).join("");
+
+    // Pagination
+    const pg = document.getElementById("pagination");
+    pg.innerHTML = "";
+    for (let i = 1; i <= data.pages; i++) {
+      const b = document.createElement("button");
+      b.textContent = i;
+      b.className = "btn btn-sm " + (i === currentPage ? "btn-primary" : "btn-secondary");
+      b.onclick = () => { currentPage = i; loadApplications(); };
+      pg.appendChild(b);
+    }
+  }
+
+  async function loadStats() {
+    const { ok, data } = await apiCall("GET", "/api/analytics");
+    if (!ok) return;
+    [["st-total",data.total],["st-eligible",data.eligible],["st-fraud",data.fraud_flagged],
+     ["st-review",data.under_review],["st-approved",data.approved],["st-rejected",data.rejected]]
+    .forEach(([id,val]) => {
+      const el = document.getElementById(id);
+      if (el) animateCount(el, val);
+    });
+  }
+
+  // ── Override modal ───────────────────────────────────────────
+  function openModal(id, name, currentStatus) {
+    selectedApp = { id, name };
+    document.getElementById("modal-app-id").textContent = `#${id}`;
+    document.getElementById("modal-app-name").textContent = name;
+    document.getElementById("modal-alert").innerHTML = "";
+    document.getElementById("modal-note").value = "";
+    document.getElementById("modal-action").value =
+      currentStatus === "Approved" ? "Rejected" : "Approved";
+    document.getElementById("modal-overlay").classList.remove("hidden");
+  }
+  function closeModal() {
+    document.getElementById("modal-overlay").classList.add("hidden");
+    selectedApp = null;
+  }
+  async function submitOverride() {
+    if (!selectedApp) return;
+    const action = document.getElementById("modal-action").value;
+    const note   = document.getElementById("modal-note").value.trim();
+    const btn    = document.getElementById("modal-btn");
+    document.getElementById("modal-alert").innerHTML = "";
+    btn.disabled = true; btn.textContent = "Saving…";
+
+    const { ok, data } = await apiCall("POST", "/api/admin/override",
+      { application_id: selectedApp.id, action, note });
+
+    if (ok) {
+      closeModal();
+      showToast(`Application #${selectedApp.id} updated to "${action}"`, "success");
+      loadApplications();
+    } else {
+      document.getElementById("modal-alert").innerHTML =
+        `<div class="alert alert-error">❌ ${data.error}</div>`;
+    }
+    btn.disabled = false; btn.textContent = "Confirm Override";
+  }
+
+  // ── Audit log modal ──────────────────────────────────────────
+  async function openAudit(id, name) {
+    document.getElementById("audit-app-name").textContent = name;
+    ["audit-loading"].forEach(i => document.getElementById(i).classList.remove("hidden"));
+    ["audit-list","audit-empty"].forEach(i => document.getElementById(i).classList.add("hidden"));
+    document.getElementById("audit-overlay").classList.remove("hidden");
+
+    const { ok, data } = await apiCall("GET", `/api/admin/audit/${id}`);
+    document.getElementById("audit-loading").classList.add("hidden");
+
+    if (!ok || !data.actions?.length) {
+      document.getElementById("audit-empty").classList.remove("hidden"); return;
+    }
+    const list = document.getElementById("audit-list");
+    list.innerHTML = data.actions.map(a => `
+      <li class="audit-item">
+        <div class="audit-dot"></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.2rem">
+            <span style="font-weight:600">${a.action}</span>
+            <span class="audit-time">${new Date(a.timestamp).toLocaleString("en-IN")}</span>
+          </div>
+          ${a.note ? `<div style="color:var(--text-2);font-size:0.8rem">${a.note}</div>` : ""}
+        </div>
+      </li>`).join("");
+    list.classList.remove("hidden");
+  }
+  function closeAudit() { document.getElementById("audit-overlay").classList.add("hidden"); }
+
+  // ── CSV Export ───────────────────────────────────────────────
+  async function exportCSV() {
+    showToast("Preparing export…", "info", 3000);
+    let url = "/api/admin/applications?page=1&per_page=9999";
+    if (currentFilter) url += `&status=${encodeURIComponent(currentFilter)}`;
+    if (fraudOnly)      url += `&fraud=true`;
+    const { ok, data } = await apiCall("GET", url);
+    if (!ok) { showToast("Export failed", "error"); return; }
+
+    const hdr  = ["ID","Name","Age","Income","Family Size","Location","Aadhaar","Phone","Score","Fraud","Status","Submitted"];
+    const rows = data.applications.map(a => [
+      a.id,`"${a.name}"`,a.age,a.income,a.family_size,a.location,
+      a.aadhaar,a.phone,a.score,a.fraud_flag?"Yes":"No",a.status,a.created_at
+    ]);
+    const csv  = [hdr, ...rows].map(r => r.join(",")).join("\n");
+    const link = document.createElement("a");
+    link.href  = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    link.download = `sbis_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    showToast("CSV downloaded!", "success");
+  }
+
+  // Close modals on backdrop click
+  ["modal-overlay","audit-overlay"].forEach(id =>
+    document.getElementById(id).addEventListener("click", e => {
+      if (e.target.id === id) id === "modal-overlay" ? closeModal() : closeAudit();
+    })
+  );
+
+  loadApplications();
+</script>
+</body>
+</html>

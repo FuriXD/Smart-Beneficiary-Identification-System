@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Status — Smart Beneficiary Identification System</title>
+  <meta name="description" content="Check your beneficiary application status and eligibility score.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .status-hero {
+      text-align: center;
+      padding: 3rem 0 2rem;
+    }
+    .status-icon {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+    .score-section {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .breakdown-list { list-style: none; }
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.9rem;
+    }
+    .breakdown-item:last-child { border-bottom: none; }
+    .breakdown-pts {
+      background: var(--success-bg);
+      color: var(--success);
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Govt. strip -->
+<div class="govt-strip">
+  भारत सरकार — Government of India
+  <span>|</span>
+  Ministry of Social Justice &amp; Empowerment
+  <span>|</span>
+  Smart Beneficiary Identification System
+</div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <div class="logo-icon">🏗️</div>
+      <div class="brand-text">
+        <span class="brand-app">SBIS</span>
+        <span class="brand-tagline">Smart Beneficiary Identification System</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/apply">Apply</a></li>
+      <li><a href="/status" class="active">My Status</a></li>
+      <li><a href="/analytics">Analytics</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container" style="max-width:700px">
+
+    <!-- Loading -->
+    <div id="loading-state" class="text-center" style="padding:4rem 0">
+      <div class="spinner"></div>
+      <p style="margin-top:1rem">Fetching your application…</p>
+    </div>
+
+    <!-- No application -->
+    <div id="no-app-state" class="hidden text-center" style="padding:4rem 0">
+      <div style="font-size:4rem">📋</div>
+      <h2 style="margin:1rem 0 0.5rem">No Application Found</h2>
+      <p>You haven't submitted a beneficiary application yet.</p>
+      <a href="/apply" class="btn btn-primary btn-lg" style="margin-top:1.5rem">Apply Now →</a>
+    </div>
+
+    <!-- Application details -->
+    <div id="app-state" class="hidden">
+      <div class="status-hero">
+        <span id="status-icon" class="status-icon">⏳</span>
+        <h1 id="status-title">Loading…</h1>
+        <div id="status-badge" style="margin-top:0.5rem"></div>
+      </div>
+
+      <!-- Score card -->
+      <div class="card mb-3" id="score-card">
+        <h3 style="margin-bottom:1.5rem">Eligibility Score</h3>
+        <div class="score-section">
+          <!-- Score ring -->
+          <div class="score-ring" id="score-ring-container" style="margin:0 auto">
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <defs>
+                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#6C63FF"/>
+                  <stop offset="100%" stop-color="#00D4AA"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-track" cx="75" cy="75" r="62"/>
+              <circle class="ring-fill" id="ring-fill" cx="75" cy="75" r="62"
+                      stroke-dasharray="390" stroke-dashoffset="390"/>
+            </svg>
+            <div class="ring-text">
+              <span class="ring-number gradient-text" id="ring-number">0</span>
+              <span class="ring-label">/ 100</span>
+            </div>
+          </div>
+
+          <!-- Breakdown -->
+          <div style="flex:1;min-width:200px">
+            <p style="font-size:0.8rem;margin-bottom:0.75rem;text-transform:uppercase;
+                      letter-spacing:0.08em;color:var(--text-muted)">Score Breakdown</p>
+            <ul class="breakdown-list" id="breakdown-list">
+              <li class="breakdown-item"><span style="color:var(--text-muted)">No rules applied</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application details -->
+      <div class="card mb-3">
+        <h3 style="margin-bottom:1.25rem">Application Details</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem" id="details-grid">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Fraud alert (shown only if flagged) -->
+      <div id="fraud-card" class="alert alert-warn hidden">
+        🚩 <strong>Fraud Flag Active</strong> — <span id="fraud-reason"></span>
+      </div>
+
+      <!-- CTA -->
+      <div style="text-align:center;margin-top:2rem">
+        <a href="/analytics" class="btn btn-ghost">View System Analytics →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  requireLogin();
+
+  function statusConfig(status) {
+    const map = {
+      "Eligible":     { icon:"✅", badge:"badge-eligible",  title:"You are Eligible!" },
+      "Not Eligible": { icon:"❌", badge:"badge-not",       title:"Not Eligible" },
+      "Under Review": { icon:"🔍", badge:"badge-review",    title:"Under Review" },
+      "Approved":     { icon:"🎉", badge:"badge-approved",  title:"Manually Approved" },
+      "Rejected":     { icon:"🚫", badge:"badge-rejected",  title:"Application Rejected" },
+      "Pending":      { icon:"⏳", badge:"badge-pending",   title:"Pending Decision" }
+    };
+    return map[status] || { icon:"❓", badge:"badge-pending", title:status };
+  }
+
+  function formatInr(n) {
+    return "₹" + Number(n).toLocaleString("en-IN");
+  }
+
+  async function loadStatus() {
+    const { ok, data } = await apiCall("GET", "/api/status");
+
+    document.getElementById("loading-state").classList.add("hidden");
+
+    if (!ok || !data.has_application) {
+      document.getElementById("no-app-state").classList.remove("hidden");
+      return;
+    }
+
+    document.getElementById("app-state").classList.remove("hidden");
+    const app = data.application;
+    const cfg = statusConfig(app.status);
+
+    document.getElementById("status-icon").textContent = cfg.icon;
+    document.getElementById("status-title").textContent = cfg.title;
+    document.getElementById("status-badge").innerHTML =
+      `<span class="badge ${cfg.badge}">${app.status}</span>`;
+
+    // Score ring animation — r=62, circumference=2π*62≈390
+    const score = app.score;
+    const circumference = 390;
+    const offset = circumference - (score / 100) * circumference;
+    setTimeout(() => {
+      document.getElementById("ring-fill").style.strokeDashoffset = offset;
+      // Animate number
+      const numEl = document.getElementById("ring-number");
+      let cur = 0;
+      const step = Math.ceil(score / 40);
+      const iv = setInterval(() => {
+        cur = Math.min(cur + step, score);
+        numEl.textContent = cur;
+        if (cur >= score) clearInterval(iv);
+      }, 24);
+    }, 300);
+
+    // Score breakdown (re-computed client-side from stored values)
+    const rules = [];
+    const loc = (app.location || "").toLowerCase();
+    if (app.income < 250000) rules.push(["Income < ₹2,50,000", "+40"]);
+    if (app.family_size > 4) rules.push(["Family size > 4", "+20"]);
+    if (loc === "rural") rules.push(["Rural location", "+20"]);
+    if (app.age >= 60) rules.push(["Senior citizen (≥60)", "+10"]);
+    else if (app.age < 18) rules.push(["Minor applicant (<18)", "+10"]);
+
+    const bl = document.getElementById("breakdown-list");
+    if (rules.length) {
+      bl.innerHTML = rules.map(([rule, pts]) =>
+        `<li class="breakdown-item"><span>${rule}</span><span class="breakdown-pts">${pts}</span></li>`
+      ).join("");
+    } else {
+      bl.innerHTML = `<li class="breakdown-item"><span style="color:var(--text-muted)">No qualifying criteria met</span></li>`;
+    }
+
+    // Details grid
+    const fields = [
+      ["👤 Name",        app.name],
+      ["🎂 Age",         app.age + " years"],
+      ["💰 Income",      formatInr(app.income) + " /year"],
+      ["👨‍👩‍👧‍👦 Family",    app.family_size + " members"],
+      ["📍 Location",    app.location.charAt(0).toUpperCase() + app.location.slice(1)],
+      ["📱 Phone",       app.phone],
+      ["🪪 Aadhaar",     app.aadhaar],
+      ["📅 Submitted",   new Date(app.created_at).toLocaleDateString("en-IN",{dateStyle:"long"})]
+    ];
+    document.getElementById("details-grid").innerHTML = fields.map(([label, val]) => `
+      <div style="background:rgba(255,255,255,0.03);padding:0.75rem;border-radius:var(--radius-sm);
+                  border:1px solid var(--glass-border)">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem">${label}</div>
+        <div style="font-weight:500">${val}</div>
+      </div>`).join("");
+
+    // Fraud flag
+    if (app.fraud_flag) {
+      document.getElementById("fraud-card").classList.remove("hidden");
+      document.getElementById("fraud-reason").textContent = app.fraud_reason || "Suspicious pattern detected";
+    }
+  }
+
+  loadStatus();
+</script>
+</body>
+</html>

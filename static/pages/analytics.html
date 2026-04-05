@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — Smart Beneficiary Identification System</title>
+  <meta name="description" content="Live analytics and impact metrics for the Smart Beneficiary Identification System.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 768px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    .chart-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Govt. strip -->
+<div class="govt-strip">
+  भारत सरकार — Government of India
+  <span>|</span>
+  Ministry of Social Justice &amp; Empowerment
+  <span>|</span>
+  Smart Beneficiary Identification System
+</div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <div class="logo-icon">🏛️</div>
+      <div class="brand-text">
+        <span class="brand-app">SBIS</span>
+        <span class="brand-tagline">Smart Beneficiary Identification System</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/admin">Dashboard</a></li>
+      <li><a href="/analytics" class="active">Analytics</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container">
+
+    <div style="margin-bottom:2rem">
+      <h1>System <span style="color:var(--blue-700)">Analytics</span></h1>
+      <p>Live metrics and insights across all beneficiary applications</p>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.5rem" id="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon-blue">📋</div>
+        <div class="kpi-body"><div class="kpi-number" id="a-total">–</div><div class="kpi-label">Total Applications</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon-green">✅</div>
+        <div class="kpi-body"><div class="kpi-number" id="a-eligible" style="color:var(--success)">–</div><div class="kpi-label">Eligible</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon-red">🚩</div>
+        <div class="kpi-body"><div class="kpi-number" id="a-fraud" style="color:var(--danger)">–</div><div class="kpi-label">Fraud Flagged</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon-blue">🎯</div>
+        <div class="kpi-body"><div class="kpi-number" id="a-avgscore">–</div><div class="kpi-label">Avg Score</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon-blue">👥</div>
+        <div class="kpi-body"><div class="kpi-number" id="a-users">–</div><div class="kpi-label">Registered Users</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon-amber">⚠️</div>
+        <div class="kpi-body"><div class="kpi-number" id="a-fraudpct" style="color:var(--warning)">–</div><div class="kpi-label">Fraud Rate %</div></div>
+      </div>
+    </div>
+
+    <!-- Insights -->
+    <div class="card mb-3" id="insights-card">
+      <h3 style="margin-bottom:1rem">💡 Key Insights</h3>
+      <ul class="insights-list" id="insights-list">
+        <li class="insight-item">Loading insights…</li>
+      </ul>
+    </div>
+
+    <!-- Charts grid -->
+    <div class="charts-grid">
+
+      <!-- Doughnut: Status distribution -->
+      <div class="card">
+        <div class="chart-title">📊 Status Distribution</div>
+        <div class="chart-container">
+          <canvas id="chart-status"></canvas>
+        </div>
+      </div>
+
+      <!-- Doughnut: Urban vs Rural -->
+      <div class="card">
+        <div class="chart-title">🌾 Urban vs Rural Applicants</div>
+        <div class="chart-container">
+          <canvas id="chart-location"></canvas>
+        </div>
+      </div>
+
+      <!-- Bar: Score distribution -->
+      <div class="card">
+        <div class="chart-title">🎯 Score Distribution</div>
+        <div class="chart-container">
+          <canvas id="chart-scores"></canvas>
+        </div>
+      </div>
+
+      <!-- Line: 7-day trend -->
+      <div class="card">
+        <div class="chart-title">📅 7-Day Application Trend</div>
+        <div class="chart-container">
+          <canvas id="chart-trend"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Fraud breakdown -->
+    <div class="card mt-3">
+      <div class="chart-title">🚩 Fraud vs Clean Applications</div>
+      <div class="chart-container" style="height:180px">
+        <canvas id="chart-fraud"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  requireLogin(); // Allow any logged-in user
+
+  // ── Chart.js global defaults (light theme) ──────────────────
+  Chart.defaults.color = "#64748B";
+  Chart.defaults.borderColor = "rgba(226,232,240,1)";
+  Chart.defaults.font.family = "Inter, sans-serif";
+
+  const PALETTE = {
+    eligible:    "#4CAF84",
+    not:         "#FF4D6A",
+    review:      "#FFA726",
+    approved:    "#00D4AA",
+    rejected:    "#FF6B8A",
+    pending:     "#6C63FF",
+    fraud:       "#FF4D6A",
+    clean:       "#4CAF84",
+    rural:       "#00D4AA",
+    urban:       "#6C63FF"
+  };
+
+  let charts = {};
+
+  function destroyChart(id) {
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  }
+
+  async function loadAnalytics() {
+    const { ok, data } = await apiCall("GET", "/api/analytics");
+    if (!ok) return;
+
+    // KPIs — animate counters
+    animateCount(document.getElementById("a-total"),    data.total);
+    animateCount(document.getElementById("a-eligible"), data.eligible);
+    animateCount(document.getElementById("a-fraud"),    data.fraud_flagged);
+    animateCount(document.getElementById("a-avgscore"), data.avg_score);
+    animateCount(document.getElementById("a-users"),    data.total_users);
+    // fraud percent with % suffix added after animation
+    const fpEl = document.getElementById("a-fraudpct");
+    animateCount({ textContent: 0, set textContent(v) { fpEl.textContent = v + "%"; } }, data.fraud_percent);
+
+    // Insights
+    document.getElementById("insights-list").innerHTML =
+      (data.insights || []).map(i =>
+        `<li class="insight-item">${i}</li>`).join("") ||
+      `<li class="insight-item">No insights yet.</li>`;
+
+    // ── Status Doughnut ─────────────────────────────────────────
+    destroyChart("status");
+    charts["status"] = new Chart(document.getElementById("chart-status"), {
+      type: "doughnut",
+      data: {
+        labels: ["Eligible","Not Eligible","Under Review","Approved","Rejected"],
+        datasets: [{
+          data: [data.eligible, data.not_eligible, data.under_review, data.approved, data.rejected],
+          backgroundColor: [
+            PALETTE.eligible, PALETTE.not, PALETTE.review, PALETTE.approved, PALETTE.rejected
+          ],
+          borderWidth: 2,
+          borderColor: "#FFFFFF"
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "right", labels: { usePointStyle: true, padding: 16, font:{size:12} } }
+        },
+        cutout: "65%"
+      }
+    });
+
+    // ── Location Doughnut ───────────────────────────────────────
+    destroyChart("location");
+    charts["location"] = new Chart(document.getElementById("chart-location"), {
+      type: "doughnut",
+      data: {
+        labels: ["Rural", "Urban"],
+        datasets: [{
+          data: [data.rural_count, data.urban_count],
+          backgroundColor: [PALETTE.rural, PALETTE.urban],
+          borderWidth: 2, borderColor: "#FFFFFF"
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "right", labels: { usePointStyle: true, padding: 16, font:{size:12} } } },
+        cutout: "65%"
+      }
+    });
+
+    // ── Score Bar ───────────────────────────────────────────────
+    const buckets = data.score_buckets;
+    destroyChart("scores");
+    charts["scores"] = new Chart(document.getElementById("chart-scores"), {
+      type: "bar",
+      data: {
+        labels: Object.keys(buckets),
+        datasets: [{
+          label: "Applications",
+          data: Object.values(buckets),
+          backgroundColor: ["rgba(108,99,255,0.7)","rgba(108,99,255,0.6)","rgba(255,167,38,0.7)","rgba(0,212,170,0.7)","rgba(76,175,132,0.8)"],
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color:"rgba(226,232,240,0.8)" }, ticks: { stepSize: 1 } }
+        }
+      }
+    });
+
+    // ── Trend Line ──────────────────────────────────────────────
+    const trend = data.trend || [];
+    destroyChart("trend");
+    charts["trend"] = new Chart(document.getElementById("chart-trend"), {
+      type: "line",
+      data: {
+        labels: trend.map(d => {
+          const dt = new Date(d.date);
+          return dt.toLocaleDateString("en-IN",{month:"short",day:"numeric"});
+        }),
+        datasets: [{
+          label: "Applications",
+          data: trend.map(d => d.count),
+          borderColor: "#6C63FF",
+          backgroundColor: "rgba(108,99,255,0.12)",
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: "#6C63FF",
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color:"rgba(226,232,240,0.8)" }, ticks: { stepSize: 1 } }
+        }
+      }
+    });
+
+    // ── Fraud horizontal bar ────────────────────────────────────
+    destroyChart("fraud");
+    charts["fraud"] = new Chart(document.getElementById("chart-fraud"), {
+      type: "bar",
+      data: {
+        labels: ["Fraud Flagged", "Clean Applications"],
+        datasets: [{
+          data: [data.fraud_flagged, data.total - data.fraud_flagged],
+          backgroundColor: [PALETTE.fraud, PALETTE.clean],
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color:"rgba(226,232,240,0.8)" } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  loadAnalytics();
+  // Auto-refresh every 30 seconds
+  setInterval(loadAnalytics, 30000);
+</script>
+</body>
+</html>

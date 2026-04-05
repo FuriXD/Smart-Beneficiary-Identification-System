@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply — Smart Beneficiary Identification System</title>
+  <meta name="description" content="Submit your welfare beneficiary application through the SBIS portal.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Govt. strip -->
+<div class="govt-strip">
+  भारत सरकार — Government of India
+  <span>|</span>
+  Ministry of Social Justice &amp; Empowerment
+  <span>|</span>
+  Smart Beneficiary Identification System
+</div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <div class="logo-icon">🏛️</div>
+      <div class="brand-text">
+        <span class="brand-app">SBIS</span>
+        <span class="brand-tagline">Smart Beneficiary Identification System</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/apply" class="active">Apply</a></li>
+      <li><a href="/status">My Status</a></li>
+      <li><a href="/analytics">Analytics</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="container" style="max-width:620px">
+
+    <div style="text-align:center;margin-bottom:2rem">
+      <h1>Beneficiary <span class="gradient-text">Application</span></h1>
+      <p>Fill in your details accurately — all information is verified against eligibility criteria</p>
+    </div>
+
+    <!-- Scoring criteria hint -->
+    <div class="card mb-3" style="border-color:var(--blue-100);background:var(--blue-50)">
+      <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--blue-900)">📋 Eligibility Criteria (Score ≥ 60 = Eligible)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.83rem">
+        <div class="insight-item">💰 Income &lt; ₹2.5L → +40pts</div>
+        <div class="insight-item">👨‍👩‍👧‍👦 Family &gt; 4 → +20pts</div>
+        <div class="insight-item">🌾 Rural area → +20pts</div>
+        <div class="insight-item">👴 Age ≥60 or &lt;18 → +10pts</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="apply-alert"></div>
+
+      <form id="apply-form" novalidate>
+        <h3 style="margin-bottom:1rem;font-size:1rem">Personal Information</h3>
+
+        <div class="form-group">
+          <label class="form-label" for="app-name">Full Name</label>
+          <input id="app-name" type="text" class="form-input"
+                 placeholder="As per identity document">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="app-age">Age (years)</label>
+            <input id="app-age" type="number" class="form-input"
+                   placeholder="e.g. 35" min="0" max="120">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-family">Family Size</label>
+            <input id="app-family" type="number" class="form-input"
+                   placeholder="Total members" min="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="app-income">Annual Income (₹)</label>
+          <input id="app-income" type="number" class="form-input"
+                 placeholder="e.g. 180000" min="0">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="app-location">Location Type</label>
+          <select id="app-location" class="form-select">
+            <option value="">— Select —</option>
+            <option value="rural">Rural</option>
+            <option value="urban">Urban</option>
+          </select>
+        </div>
+
+        <hr class="divider">
+        <h3 style="margin-bottom:1rem;font-size:1rem">Identity Details</h3>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="app-aadhaar">Aadhaar Number</label>
+            <input id="app-aadhaar" type="text" class="form-input"
+                   placeholder="12-digit number" maxlength="12" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-phone">Contact Phone</label>
+            <input id="app-phone" type="tel" class="form-input"
+                   placeholder="10-digit mobile" maxlength="10">
+          </div>
+        </div>
+
+        <button id="apply-btn" type="submit" class="btn btn-primary btn-block btn-lg"
+                style="margin-top:1rem">
+          Submit Application →
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  const user = requireLogin("user");
+  if (user) document.getElementById("app-name").value = user.name;
+
+  document.getElementById("apply-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const alertEl  = document.getElementById("apply-alert");
+    const btn      = document.getElementById("apply-btn");
+    alertEl.innerHTML = "";
+
+    const name       = document.getElementById("app-name").value.trim();
+    const age        = document.getElementById("app-age").value;
+    const income     = document.getElementById("app-income").value;
+    const family_size= document.getElementById("app-family").value;
+    const location   = document.getElementById("app-location").value;
+    const aadhaar    = document.getElementById("app-aadhaar").value.trim();
+    const phone      = document.getElementById("app-phone").value.trim();
+
+    if (!name||!age||!income||!family_size||!location||!aadhaar||!phone) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ All fields are required.</div>`; return;
+    }
+    if (!/^\d{12}$/.test(aadhaar)) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Aadhaar must be exactly 12 digits.</div>`; return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      alertEl.innerHTML = `<div class="alert alert-error">⚠️ Phone must be exactly 10 digits.</div>`; return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Processing application…";
+
+    const { ok, data } = await apiCall("POST", "/api/apply", {
+      name, age: +age, income: +income, family_size: +family_size,
+      location, aadhaar, phone
+    });
+
+    if (ok) {
+      alertEl.innerHTML = `<div class="alert alert-success">✅ Application submitted! Redirecting to status…</div>`;
+      setTimeout(() => window.location.href = "/status", 1500);
+    } else {
+      alertEl.innerHTML = `<div class="alert alert-error">❌ ${data.error || "Submission failed"}</div>`;
+      btn.disabled = false;
+      btn.textContent = "Submit Application →";
+    }
+  });
+</script>
+</body>
+</html>
